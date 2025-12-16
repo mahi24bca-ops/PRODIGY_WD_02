@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Stopwatch</title>
+
+  <style>
+    :root {
+      --bg: #0a0f1f;
+      --card-bg: rgba(255, 255, 255, 0.08);
+      --primary: #00d4ff;
+      --secondary: #0066ff;
+      --text: #e9f7ff;
+      --glow: 0 0 20px rgba(0, 212, 255, 0.7);
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      font-family: "Poppins", sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      color: var(--text);
+      transition: 0.3s ease-in-out;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 420px;
+      padding: 35px;
+      border-radius: 22px;
+      background: var(--card-bg);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 0 35px rgba(0, 212, 255, 0.15),
+                  inset 0 0 20px rgba(255, 255, 255, 0.04);
+      text-align: center;
+      animation: fade 0.6s ease;
+    }
+
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+      font-size: 2.2rem;
+      margin-bottom: 20px;
+      background: linear-gradient(90deg, #00d4ff, #0066ff);
+      -webkit-background-clip: text;
+      color: transparent;
+    }
+
+    #display {
+      font-size: 3.3rem;
+      font-weight: 600;
+      margin: 20px 0 30px;
+      color: #ffffff;
+      text-shadow: 0px 0px 15px rgba(0, 212, 255, 0.6);
+    }
+
+    .btns button {
+      background: linear-gradient(135deg, #00d4ff, #0066ff);
+      color: white;
+      border: none;
+      padding: 12px 22px;
+      margin: 10px 8px;
+      border-radius: 14px;
+      font-size: 1.05rem;
+      cursor: pointer;
+      transition: 0.25s;
+      box-shadow: var(--glow);
+    }
+
+    .btns button:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 0 25px rgba(0, 212, 255, 1);
+    }
+
+    .btns button:active {
+      transform: scale(0.95);
+    }
+
+    #laps {
+      margin-top: 25px;
+      max-height: 200px;
+      overflow-y: auto;
+      padding-right: 5px;
+    }
+
+    .lap {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 10px;
+      border-left: 4px solid var(--primary);
+      font-size: 1.1rem;
+      animation: slide 0.3s ease;
+      box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.05);
+    }
+
+    @keyframes slide {
+      from { transform: translateX(30px); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    #themeToggle {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      padding: 8px 14px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #00d4ff, #0066ff);
+      color: white;
+      border: none;
+      cursor: pointer;
+      box-shadow: var(--glow);
+      transition: 0.3s;
+    }
+
+    #themeToggle:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 25px rgba(0, 212, 255, 0.9);
+    }
+
+    /* Light Theme */
+    body.light {
+      --bg: #eef6ff;
+      --text: #0a0a14;
+      --card-bg: rgba(255, 255, 255, 0.6);
+      --primary: #0066ff;
+      --secondary: #0044cc;
+      --glow: 0 0 15px rgba(0, 102, 255, 0.8);
+    }
+  </style>
+
+</head>
+<body>
+
+  <button id="themeToggle">Toggle Theme</button>
+
+  <div class="container">
+    <h1>Stopwatch</h1>
+    <div id="display">00:00:00</div>
+
+    <div class="btns">
+      <button onclick="startStop()">Start</button>
+      <button onclick="pauseTime()">Pause</button>
+      <button onclick="resetTime()">Reset</button>
+      <button onclick="lapTime()">Lap</button>
+    </div>
+
+    <div id="laps"></div>
+  </div>
+
+  <script>
+    let startTime, updatedTime;
+    let difference = 0;
+    let timerInterval;
+    let running = false;
+    let lapCount = 0;
+
+    function formatTime(time) {
+      let hrs = Math.floor(time / (1000 * 60 * 60));
+      let mins = Math.floor((time % (1000 * 60 * 60)) / (1000 * 60));
+      let secs = Math.floor((time % (1000 * 60)) / 1000);
+
+      return (
+        (hrs < 10 ? "0" + hrs : hrs) +
+        ":" + (mins < 10 ? "0" + mins : mins) +
+        ":" + (secs < 10 ? "0" + secs : secs)
+      );
+    }
+
+    function startStop() {
+      if (!running) {
+        running = true;
+        startTime = new Date().getTime() - (difference || 0);
+        timerInterval = setInterval(updateDisplay, 100);
+      }
+    }
+
+    function pauseTime() {
+      running = false;
+      clearInterval(timerInterval);
+    }
+
+    function resetTime() {
+      running = false;
+      clearInterval(timerInterval);
+      difference = 0;
+      lapCount = 0;
+      document.getElementById("display").innerText = "00:00:00";
+      document.getElementById("laps").innerHTML = "";
+    }
+
+    function lapTime() {
+      if (!running) return;
+
+      lapCount++;
+      let lap = document.createElement("div");
+      lap.className = "lap";
+      lap.textContent = `Lap ${lapCount}: ${formatTime(difference)}`;
+      document.getElementById("laps").prepend(lap);
+    }
+
+    function updateDisplay() {
+      updatedTime = new Date().getTime();
+      difference = updatedTime - startTime;
+      document.getElementById("display").innerText = formatTime(difference);
+    }
+
+    document.getElementById("themeToggle").onclick = () => {
+      document.body.classList.toggle("light");
+    };
+  </script>
+
+</body>
+
+</html>
